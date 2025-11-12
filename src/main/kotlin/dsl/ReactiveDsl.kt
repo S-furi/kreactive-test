@@ -1,0 +1,39 @@
+package dsl
+
+import core.Observable
+import core.Signal
+import graph.Source
+import kotlin.reflect.KProperty
+import kotlin.reflect.KProperty0
+import kotlin.reflect.jvm.isAccessible
+
+class SourceDelegateProvider<T>(private val initialValue: T) {
+
+    operator fun provideDelegate(thisRef: Any?, property: KProperty<*>): Source<T> =
+        Source(name = property.name.toKebab(), initialValue = initialValue)
+}
+
+class ObservableDelegateProvider<T>(private val compute: () -> T) {
+
+    operator fun provideDelegate(thisRef: Any?, property: KProperty<*>): Observable<T> =
+        Observable(name = property.name.toKebab(), compute =compute)
+}
+
+class SignalDelegateProvider<T> (private val compute: () -> T) {
+
+    operator fun provideDelegate(thisRef: Any?, property: KProperty<*>): Signal<T> =
+        Signal(name = property.name.toKebab(), compute =compute)
+}
+
+private fun String.toKebab() = map { if (it.isUpperCase()) "-${it.lowercase()}" else it }.joinToString("")
+
+fun <T> source(initialValue: T): SourceDelegateProvider<T> = SourceDelegateProvider(initialValue)
+
+fun <T> eagerObserving(compute: () -> T): ObservableDelegateProvider<T> = ObservableDelegateProvider(compute)
+
+fun <T> lazyObserving(compute: () -> T): SignalDelegateProvider<T> = SignalDelegateProvider(compute)
+
+inline fun <reified D> KProperty0<*>.getAccessibleDelegates(): D? {
+    isAccessible = true
+    return getDelegate() as? D
+}
