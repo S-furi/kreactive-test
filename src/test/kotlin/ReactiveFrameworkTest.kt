@@ -10,8 +10,135 @@ import org.junit.jupiter.api.assertThrows
 class ReactiveFrameworkTest {
 
     @Test
-    @DisplayName("Test Push (Observable) vs. Pull (Signal) behavior")
-    fun testPushVsPullBehavior() {
+    fun `test Source value setting idempotency`() {
+        var a by source(10)
+        var computeCount = 0
+        val b by eagerObserving {
+            computeCount++
+            a
+        }
+
+        assertEquals(1, computeCount, "Observable should run once on init")
+        a = 10
+        assertEquals(
+            1,
+            computeCount,
+            "Observable should not re-run when source is set to the same value"
+        )
+    }
+
+    @Test
+    fun `test Signal diamond dependency is not called twice`() {
+        var a by source(10)
+        var bComputeCount = 0
+        var cComputeCount = 0
+        var dComputeCount = 0
+
+        val b by lazyObserving {
+            bComputeCount++
+            a * 2
+        }
+        val c by lazyObserving {
+            cComputeCount++
+            a + 5
+        }
+        val d by lazyObserving {
+            dComputeCount++
+            b + c
+        }
+
+        assertEquals(35, d)
+        assertEquals(1, bComputeCount)
+        assertEquals(1, cComputeCount)
+        assertEquals(1, dComputeCount)
+
+        a = 20
+        assertEquals(1, bComputeCount, "B should not recompute yet")
+        assertEquals(1, cComputeCount, "C should not recompute yet")
+        assertEquals(1, dComputeCount, "D should not recompute yet")
+
+
+        listOf("should recompute", "should use cache").forEach { msg ->
+            assertEquals(65, d)
+            assertEquals(2, bComputeCount, "B $msg")
+            assertEquals(2, cComputeCount, "C $msg")
+            assertEquals(2, dComputeCount, "D $msg")
+        }
+    }
+
+    @Test
+    fun `test Signal is never computed if never read`() {
+        var a by source(20)
+        var pullComputeCount = 0
+
+        val signal by lazyObserving {
+            pullComputeCount++
+            a * 10
+        }
+
+        a = 20
+        a = 30
+
+        assertEquals(
+            0,
+            pullComputeCount,
+            "Signal should not run on dependency change if not accessed"
+        )
+    }
+
+    @Test
+    fun `an observable that depends on a signal should make it act as a push dependency`() {
+        var a by source(10)
+        var signalComputeCount = 0
+
+        val pullSignal by lazyObserving {
+            signalComputeCount++
+            a * 2
+        }
+
+        val pushObservable by eagerObserving {
+            pullSignal // This Observable depends on the Signal
+        }
+
+        a = 30
+
+        assertEquals(
+            2,
+            signalComputeCount,
+            "Signal recomputation has been triggered by it's Observable dependency",
+        )
+        assertEquals(60, pushObservable, "Observable has value updated")
+    }
+
+    @Test
+    fun `exception in Observable is not swallowed`() {
+        var a by source(10)
+        val b by eagerObserving {
+            if (a > 15) throw IllegalStateException("Test exception")
+            a
+        }
+
+        assertThrows<IllegalStateException> {
+            a = 20
+        }
+    }
+
+    @Test
+    fun `exception in Signals is not swallowed`() {
+        var a by source(10)
+        val b by  lazyObserving {
+            if (a > 15) throw IllegalStateException("Test exception")
+            a
+        }
+
+        a = 20
+        assertThrows<IllegalStateException> {
+            val value = b
+        }
+    }
+
+    @Test
+    fun `test Push (Observable) vs Pull (Signal) behavior()`() {
         var simulationTime by source(0.0)
         var eventQueueCount by source(0)
         var pushComputeCount = 0
@@ -67,8 +194,7 @@ class ReactiveFrameworkTest {
     }
 
     @Test
-    @DisplayName("Test Dynamic Dependencies and Lazy Unlinking")
-    fun testDynamicDependenciesAndLazyUnlinking() {
+    fun `test dynamic dependencies and lazy unlinking`() {
         var cond by source(true)
         var a by source("A")
         var b by source("B")
@@ -114,7 +240,7 @@ class ReactiveFrameworkTest {
 
     @Test
     @DisplayName("Test guardrail prevents mutation inside a computed block")
-    fun testComputedBlocksCannotMutateSources() {
+    fun `guardrail should prevent mutation inside a computed block (observable or signal)`() {
         var a by source(10.0)
         var b by source(false)
 
