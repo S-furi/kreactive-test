@@ -48,5 +48,7 @@ object DependencyTracker {
         }
     }
 
+    fun isCurrentlyTracking(): Boolean = this.subscribersStack.get().isNotEmpty()
+
     private fun <T> Stack<T>.peekOrNull(): T? = runCatching { peek() }.getOrNull()
 }

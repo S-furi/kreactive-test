@@ -9,7 +9,7 @@ import kotlin.reflect.KProperty
 abstract class ObservableProvider<T> : Provider<T> {
     /**
      * Keep a reference to all [Subscribers][Subscriber] along with
-     * the [las run epoch][Subscriber.lastRunEpoch] counter it had when it last *read* this node.
+     * the [last run epoch][Subscriber.lastRunEpoch] counter it had when it last *read* this node.
      */
     protected val subscribers: MutableMap<Subscriber, Long> = ConcurrentHashMap()
 
@@ -65,6 +65,13 @@ class Source<T>(initialValue: T, private val name: String = UUID.randomUUID().to
     }
 
     fun set(newValue: T) {
+
+        if (DependencyTracker.isCurrentlyTracking()) {
+            throw IllegalStateException(
+                "Cannot set Source '$name' (value: $newValue) from within a computed block (Observable or Signal)."
+            )
+        }
+
         if (_value == newValue) return
         _value = newValue
         updateFreshSubscribers()
@@ -76,3 +83,6 @@ class Source<T>(initialValue: T, private val name: String = UUID.randomUUID().to
 
     override fun toString(): String = "SOURCE-$name(value=$_value)"
 }
+
+
+class ObservableMap<K, V>
