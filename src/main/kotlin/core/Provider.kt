@@ -16,6 +16,8 @@ interface Provider<out T> {
      * @return the current value
      */
     fun get(): T
+
+    fun <S> map(transform: (T) -> S): Provider<S>
 }
 
 /**

@@ -29,6 +29,9 @@ class Signal<T>(
         return _value!!
     }
 
+    override fun <S> map(transform: (T) -> S): Signal<S> =
+        Signal("[mapped]-$name") { transform(compute()) }
+
     override fun notifyUpdate() {
         // no-op for PULL-based computations
     }

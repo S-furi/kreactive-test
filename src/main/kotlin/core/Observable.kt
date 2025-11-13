@@ -15,19 +15,22 @@ class Observable<T>(
     private val compute: () -> T,
 ) : ObservableProvider<T>(), Subscriber {
 
-    @Volatile private var _value: T = runAndTrack(compute)
+    @Volatile private var current: T = runAndTrack(compute)
 
     @Volatile override var lastRunEpoch: Long = 0L
 
     override fun get(): T {
         DependencyTracker.track(this)
-        return _value
+        return current
     }
+
+    override fun <S> map(transform: (T) -> S): Observable<S> =
+        Observable("[mapped]-$name") { transform(compute()) }
 
     override fun notifyUpdate() {
         val newValue = runAndTrack(compute)
-        if (newValue != _value) {
-            _value = newValue
+        if (newValue != current) {
+            current = newValue
             updateFreshSubscribers()
         }
     }
@@ -38,6 +41,5 @@ class Observable<T>(
 
     operator fun getValue(thisRef: Any?, property: KProperty<*>): T = get()
 
-    override fun toString(): String = "Observable-$name(value=$_value, epoch=$lastRunEpoch)"
-
+    override fun toString(): String = "Observable-$name(value=$current, epoch=$lastRunEpoch)"
 }

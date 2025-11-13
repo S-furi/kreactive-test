@@ -57,11 +57,11 @@ abstract class ObservableProvider<T> : Provider<T> {
  */
 class Source<T>(initialValue: T, private val name: String = UUID.randomUUID().toString()) : ObservableProvider<T>() {
 
-    @Volatile private var _value: T = initialValue
+    @Volatile private var current: T = initialValue
 
     override fun get(): T {
         DependencyTracker.track(this)
-        return _value
+        return current
     }
 
     fun set(newValue: T) {
@@ -72,17 +72,20 @@ class Source<T>(initialValue: T, private val name: String = UUID.randomUUID().to
             )
         }
 
-        if (_value == newValue) return
-        _value = newValue
+        if (current == newValue) return
+        current = newValue
         updateFreshSubscribers()
     }
+
+    fun update(newValueFunction: (T) -> T) {
+        set(newValueFunction(current))
+    }
+
+    override fun <S> map(transform: (T) -> S): Source<S> = Source(transform(current))
 
     operator fun getValue(thisRef: Any?, property: KProperty<*>) = get()
 
     operator fun setValue(thisRef: Any?, property: KProperty<*>, value: T) = set(value)
 
-    override fun toString(): String = "SOURCE-$name(value=$_value)"
+    override fun toString(): String = "SOURCE-$name(value=$current)"
 }
-
-
-class ObservableMap<K, V>
