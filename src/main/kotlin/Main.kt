@@ -111,7 +111,28 @@ fun cond() {
     println("Value: $computed")
 }
 
+fun loop() {
+    var a by source(10.0)
+
+    var b by source(5.0)
+
+    val comp by eagerObserving {
+        if (b > 0.0) {
+            a += 10
+            println("I'm updating a then")
+        } else {
+            println("Won't update a")
+        }
+    }
+
+    val comp2 by eagerObserving {
+        println("Value of a: $a")
+    }
+}
+
 fun main() {
     base()
-//    cond()
+    cond()
+
+    loop()
 }
