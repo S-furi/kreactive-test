@@ -1,7 +1,9 @@
 package core
 
+import DependencyTracker.appendToCurrentTransaction
 import DependencyTracker.runAndTrack
-import graph.ObservableProvider
+import core.base.Computation
+import core.base.Subscriber
 import java.util.UUID
 import kotlin.reflect.KProperty
 
@@ -13,12 +15,16 @@ import kotlin.reflect.KProperty
 class Signal<T>(
     private val name: String = UUID.randomUUID().toString(),
     private val compute: () -> T,
-) : ObservableProvider<T>(), Subscriber {
-
+) : Computation<T>(),
+    Subscriber {
     @Volatile private var _value: T? = null
+
     @Volatile private var isStale: Boolean = true
 
-    @Volatile override var lastRunEpoch: Long = 0L
+    @Volatile override var lastRunEpoch: ULong = 0u
+
+    @Volatile override var level: Int = 0
+        private set
 
     override fun get(): T {
         DependencyTracker.track(this)
@@ -29,21 +35,28 @@ class Signal<T>(
         return _value!!
     }
 
-    override fun <S> map(transform: (T) -> S): Signal<S> =
-        Signal("[mapped]-$name") { transform(compute()) }
+    override fun <S> map(transform: (T) -> S): Signal<S> = Signal("[mapped]-$name") { transform(compute()) }
 
     override fun notifyUpdate() {
         // no-op for PULL-based computations
     }
 
-    override fun notifyStale() {
-        if (!isStale) {
-            isStale = true
-            updateFreshSubscribers()
+    override fun notifyStale() =
+        appendToCurrentTransaction {
+            if (!isStale) {
+                isStale = true
+                updateFreshSubscribers()
+            }
         }
+
+    override fun updateLevel(newLevel: (Int) -> Int) {
+        level = newLevel(level)
     }
 
-    operator fun getValue(thisRef: Any?, property: KProperty<*>): T = get()
+    operator fun getValue(
+        thisRef: Any?,
+        property: KProperty<*>,
+    ): T = get()
 
     override fun toString(): String = "Signal-$name(value=$_value, epoch=$lastRunEpoch)"
 }

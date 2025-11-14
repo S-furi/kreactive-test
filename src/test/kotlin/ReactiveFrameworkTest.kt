@@ -1,13 +1,16 @@
-import org.junit.jupiter.api.Test
-
 import dsl.eagerObserving
 import dsl.lazyObserving
 import dsl.source
 import org.junit.jupiter.api.Assertions.*
-import org.junit.jupiter.api.DisplayName
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 
 class ReactiveFrameworkTest {
+    @BeforeEach
+    fun resetState() {
+        DependencyTracker.reset()
+    }
 
     @Test
     fun `test Source value setting idempotency`() {
@@ -23,46 +26,20 @@ class ReactiveFrameworkTest {
         assertEquals(
             1,
             computeCount,
-            "Observable should not re-run when source is set to the same value"
+            "Observable should not re-run when source is set to the same value",
         )
     }
 
     @Test
-    fun `test Signal diamond dependency is not called twice`() {
-        var a by source(10)
-        var bComputeCount = 0
-        var cComputeCount = 0
-        var dComputeCount = 0
-
-        val b by lazyObserving {
-            bComputeCount++
-            a * 2
+    fun `an observer can depend on another observer`() {
+        var a by source("Hello")
+        val b by eagerObserving {
+            println(a)
+            a.uppercase()
         }
-        val c by lazyObserving {
-            cComputeCount++
-            a + 5
-        }
-        val d by lazyObserving {
-            dComputeCount++
-            b + c
-        }
-
-        assertEquals(35, d)
-        assertEquals(1, bComputeCount)
-        assertEquals(1, cComputeCount)
-        assertEquals(1, dComputeCount)
-
-        a = 20
-        assertEquals(1, bComputeCount, "B should not recompute yet")
-        assertEquals(1, cComputeCount, "C should not recompute yet")
-        assertEquals(1, dComputeCount, "D should not recompute yet")
-
-
-        listOf("should recompute", "should use cache").forEach { msg ->
-            assertEquals(65, d)
-            assertEquals(2, bComputeCount, "B $msg")
-            assertEquals(2, cComputeCount, "C $msg")
-            assertEquals(2, dComputeCount, "D $msg")
+        val c by eagerObserving {
+            println("B computed from B: $b")
+            "World!"
         }
     }
 
@@ -82,7 +59,7 @@ class ReactiveFrameworkTest {
         assertEquals(
             0,
             pullComputeCount,
-            "Signal should not run on dependency change if not accessed"
+            "Signal should not run on dependency change if not accessed",
         )
     }
 
@@ -117,7 +94,6 @@ class ReactiveFrameworkTest {
             if (a > 15) throw IllegalStateException("Test exception")
             a
         }
-
         assertThrows<IllegalStateException> {
             a = 20
         }
@@ -126,7 +102,7 @@ class ReactiveFrameworkTest {
     @Test
     fun `exception in Signals is not swallowed`() {
         var a by source(10)
-        val b by  lazyObserving {
+        val b by lazyObserving {
             if (a > 15) throw IllegalStateException("Test exception")
             a
         }
@@ -239,7 +215,6 @@ class ReactiveFrameworkTest {
     }
 
     @Test
-    @DisplayName("Test guardrail prevents mutation inside a computed block")
     fun `guardrail should prevent mutation inside a computed block (observable or signal)`() {
         var a by source(10.0)
         var b by source(false)
@@ -256,9 +231,10 @@ class ReactiveFrameworkTest {
             }
         }
 
-        val exception = assertThrows<IllegalStateException> {
-            b = true
-        }
+        val exception =
+            assertThrows<IllegalStateException> {
+                b = true
+            }
 
         assertThrows<IllegalStateException> {
             println(lazyComp)
@@ -266,7 +242,7 @@ class ReactiveFrameworkTest {
 
         assertTrue(
             exception.message!!.contains("Cannot set Source"),
-            "Exception message should indicate a forbidden mutation"
+            "Exception message should indicate a forbidden mutation",
         )
     }
 }

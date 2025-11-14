@@ -2,27 +2,36 @@ package dsl
 
 import core.Observable
 import core.Signal
-import graph.Source
+import core.Source
 import kotlin.reflect.KProperty
 import kotlin.reflect.KProperty0
 import kotlin.reflect.jvm.isAccessible
 
-class SourceDelegateProvider<T>(private val initialValue: T) {
-
-    operator fun provideDelegate(thisRef: Any?, property: KProperty<*>): Source<T> =
-        Source(name = property.name.toKebab(), initialValue = initialValue)
+class SourceDelegateProvider<T>(
+    private val initialValue: T,
+) {
+    operator fun provideDelegate(
+        thisRef: Any?,
+        property: KProperty<*>,
+    ): Source<T> = Source(name = property.name.toKebab(), initialValue = initialValue)
 }
 
-class ObservableDelegateProvider<T>(private val compute: () -> T) {
-
-    operator fun provideDelegate(thisRef: Any?, property: KProperty<*>): Observable<T> =
-        Observable(name = property.name.toKebab(), compute =compute)
+class ObservableDelegateProvider<T>(
+    private val compute: () -> T,
+) {
+    operator fun provideDelegate(
+        thisRef: Any?,
+        property: KProperty<*>,
+    ): Observable<T> = Observable(name = property.name.toKebab(), compute = compute)
 }
 
-class SignalDelegateProvider<T> (private val compute: () -> T) {
-
-    operator fun provideDelegate(thisRef: Any?, property: KProperty<*>): Signal<T> =
-        Signal(name = property.name.toKebab(), compute =compute)
+class SignalDelegateProvider<T>(
+    private val compute: () -> T,
+) {
+    operator fun provideDelegate(
+        thisRef: Any?,
+        property: KProperty<*>,
+    ): Signal<T> = Signal(name = property.name.toKebab(), compute = compute)
 }
 
 private fun String.toKebab() = map { if (it.isUpperCase()) "-${it.lowercase()}" else it }.joinToString("")

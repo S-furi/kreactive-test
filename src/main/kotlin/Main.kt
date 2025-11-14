@@ -1,7 +1,7 @@
 import core.Observable
 import dsl.eagerObserving
 import dsl.getAccessibleDelegates
-import graph.Source
+import core.Source
 
 data class Molecule(val name: String)
 
