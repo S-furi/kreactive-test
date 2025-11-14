@@ -4,7 +4,10 @@ import java.util.Stack
 
 /**
  * A simple stack for storing unique elements granting
- * constant time addition, removal and lookup.
+ * constant time addition (on average, it depends on time complexity
+ * of addition on the backing [LinkedHashSet]), removal and lookup.
+ *
+ * @param T the type of the items of this stack.
  */
 class UniqueStack<T> : LinkedHashSet<T>() {
     private val stack = Stack<T>()
