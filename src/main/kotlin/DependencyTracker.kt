@@ -1,5 +1,6 @@
 import core.base.Computation
 import core.base.Subscriber
+import utils.UniqueStack
 import java.util.LinkedHashMap
 import java.util.Stack
 import java.util.concurrent.atomic.AtomicBoolean
@@ -22,7 +23,7 @@ object DependencyTracker {
      */
     private val globalEpoch = AtomicReference<ULong>(0u)
 
-    private val subscribersStack = ThreadLocal.withInitial { Stack<Subscriber>() }
+    private val subscribersStack = ThreadLocal.withInitial { UniqueStack<Subscriber>() }
 
     private val transactionComputations =
         ThreadLocal.withInitial {
@@ -41,7 +42,7 @@ object DependencyTracker {
      * level or one level deeper than the input [node].
      */
     fun track(node: Computation<*>) {
-        subscribersStack.get().peekOrNull()?.let { sub ->
+        subscribersStack.get().peek()?.let { sub ->
             node.addSubscriber(sub)
             sub.updateLevel { max(it, node.level + 1) }
         }
@@ -53,14 +54,12 @@ object DependencyTracker {
      */
     fun <T> Subscriber.runAndTrack(compute: () -> T): T {
         val stack = subscribersStack.get()
-
-        if (stack.contains(this)) {
-            throw IllegalStateException("Circular dependency detected! $this is already being tracked.")
-        }
-
         lastRunEpoch = globalEpoch.getAndUpdate { it + 1u }
         updateLevel { 0 }
-        stack.push(this)
+
+        if (!stack.push(this))
+            throw IllegalStateException("Circular dependency detected! $this is already being tracked.")
+
         try {
             return compute()
         } finally {
