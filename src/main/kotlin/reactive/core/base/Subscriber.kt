@@ -1,7 +1,4 @@
-package core.base
-
-import core.Observable
-import core.Signal
+package reactive.core.base
 
 /**
  * A subscriber is any computed node (Observable or Signal)
@@ -10,19 +7,19 @@ import core.Signal
 interface Subscriber {
     /**
      * Stores the epoch of the last time this [Subscriber]
-     * started a re-computation. This value is managed by the [DependencyTracker].
+     * started a re-computation. This value is managed by the [reactive.DependencyTracker].
      */
     var lastRunEpoch: ULong
 
     /**
-     * Represent the depth of the execution graph when executing a [transaction][DependencyTracker.transaction].
+     * Represent the depth of the execution graph when executing a [transaction][reactive.DependencyTracker.transaction].
      *
-     * A [core.Source] is at depth 0 of the graph, while [observables][Observable] or [signals][Signal] directly dependent
+     * A [reactive.core.Source] is at depth 0 of the graph, while [observables][reactive.core.Observable] or [signals][reactive.core.Signal] directly dependent
      * on it are one level deeper, and so on for further dependencies chains.
-     * The levels are used to topologically-sort the computations when [DependencyTracker] scheduler's starts picking
+     * The levels are used to topologically-sort the computations when [reactive.DependencyTracker] scheduler's starts picking
      * and executing actions.
      *
-     * @see [DependencyTracker.runTransactions]
+     * @see [reactive.DependencyTracker.runTransactions]
      */
     val level: Int
 

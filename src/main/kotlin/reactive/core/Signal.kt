@@ -1,9 +1,10 @@
-package core
+package reactive.core
 
-import DependencyTracker.appendToCurrentTransaction
-import DependencyTracker.runAndTrack
-import core.base.Computation
-import core.base.Subscriber
+import reactive.DependencyTracker
+import reactive.DependencyTracker.appendToCurrentTransaction
+import reactive.DependencyTracker.runAndTrack
+import reactive.core.base.Computation
+import reactive.core.base.Subscriber
 import java.util.UUID
 import kotlin.reflect.KProperty
 

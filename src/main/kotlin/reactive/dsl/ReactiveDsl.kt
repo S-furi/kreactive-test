@@ -1,8 +1,8 @@
-package dsl
+package reactive.dsl
 
-import core.Observable
-import core.Signal
-import core.Source
+import reactive.core.Observable
+import reactive.core.Signal
+import reactive.core.Source
 import kotlin.reflect.KProperty
 import kotlin.reflect.KProperty0
 import kotlin.reflect.jvm.isAccessible
@@ -13,7 +13,8 @@ class SourceDelegateProvider<T>(
     operator fun provideDelegate(
         thisRef: Any?,
         property: KProperty<*>,
-    ): Source<T> = Source(name = property.name.toKebab(), initialValue = initialValue)
+    ): Source<T> =
+        Source(name = property.name.toKebab(), initialValue = initialValue)
 }
 
 class ObservableDelegateProvider<T>(
@@ -22,7 +23,8 @@ class ObservableDelegateProvider<T>(
     operator fun provideDelegate(
         thisRef: Any?,
         property: KProperty<*>,
-    ): Observable<T> = Observable(name = property.name.toKebab(), compute = compute)
+    ): Observable<T> =
+        Observable(name = property.name.toKebab(), compute = compute)
 }
 
 class SignalDelegateProvider<T>(
@@ -31,7 +33,8 @@ class SignalDelegateProvider<T>(
     operator fun provideDelegate(
         thisRef: Any?,
         property: KProperty<*>,
-    ): Signal<T> = Signal(name = property.name.toKebab(), compute = compute)
+    ): Signal<T> =
+        Signal(name = property.name.toKebab(), compute = compute)
 }
 
 private fun String.toKebab() = map { if (it.isUpperCase()) "-${it.lowercase()}" else it }.joinToString("")

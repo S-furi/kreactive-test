@@ -1,9 +1,9 @@
-package core
+package reactive.core
 
-import DependencyTracker.appendToCurrentTransaction
-import DependencyTracker.runAndTrack
-import core.base.Computation
-import core.base.Subscriber
+import reactive.DependencyTracker
+import reactive.DependencyTracker.appendToCurrentTransaction
+import reactive.DependencyTracker.runAndTrack
+import reactive.core.base.Subscriber
 import java.util.UUID
 import kotlin.reflect.KProperty
 
@@ -15,7 +15,7 @@ import kotlin.reflect.KProperty
 class Observable<T>(
     private val name: String = UUID.randomUUID().toString(),
     private val compute: () -> T,
-) : Computation<T>(),
+) : reactive.core.base.Computation<T>(),
     Subscriber {
     @Volatile private var current: T = runAndTrack(compute)
 

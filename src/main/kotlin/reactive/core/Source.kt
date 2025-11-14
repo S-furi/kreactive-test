@@ -1,11 +1,12 @@
-package core
+package reactive.core
 
-import core.base.Computation
+import reactive.DependencyTracker
+import reactive.core.base.Computation
 import java.util.UUID
 import kotlin.reflect.KProperty
 
 /**
- * A writeable [core.base.Provider].
+ * A writeable [reactive.core.base.Provider].
  *
  * This is the start of a reactive chain. When its value changes (by
  * means of [set]) it notifies both push and pull subscribers.

@@ -1,8 +1,8 @@
-package core.base
+package reactive.core.base
 
-import core.Observable
-import core.Signal
 import org.slf4j.LoggerFactory
+import reactive.core.Observable
+import reactive.core.Signal
 import java.util.WeakHashMap
 
 abstract class Computation<T> : Provider<T> {

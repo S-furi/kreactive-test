@@ -1,12 +1,13 @@
 @file:Suppress("UNUSED_VARIABLE", "UNUSED_PARAMETER")
 
-import core.Signal
-import dsl.eagerObserving
-import dsl.lazyObserving
-import dsl.source
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.assertThrows
+import reactive.DependencyTracker
+import reactive.core.Signal
+import reactive.dsl.eagerObserving
+import reactive.dsl.lazyObserving
+import reactive.dsl.source
 import kotlin.test.Test
 
 @Suppress("UNUSED")

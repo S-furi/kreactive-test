@@ -1,4 +1,4 @@
-package core.base
+package reactive.core.base
 
 /**
  * The common, read-only interface for any reactive value.

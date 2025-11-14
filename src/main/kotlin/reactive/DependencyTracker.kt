@@ -1,7 +1,10 @@
-import core.base.Computation
-import core.base.Subscriber
-import utils.UniqueStack
-import java.util.LinkedHashMap
+package reactive
+
+import reactive.DependencyTracker.runAndTrack
+import reactive.DependencyTracker.track
+import reactive.core.base.Computation
+import reactive.core.base.Subscriber
+import reactive.utils.UniqueStack
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.math.max
@@ -12,7 +15,7 @@ import kotlin.math.max
  * When a computed value (like Signal or Observable) runs its
  * `compute` function, it first pushes itself into this stack.
  *
- * When any other [core.base.Provider]'s `get()` is called, it checks
+ * When any other [reactive.core.base.Provider]'s `get()` is called, it checks
  * this stack. If a subscriber is on the stack, it adds that subscriber as a dependant.
  */
 object DependencyTracker {
@@ -106,7 +109,7 @@ object DependencyTracker {
      * A ─────────────► C
      * ```
      * When updating A, without sorting topologically and just inserting the keys in a sorted set (or map), we could
-     * end up with the set `[C, B]` (depends on insertion order of [source's][core.Source] subscribers). When the
+     * end up with the set `[C, B]` (depends on insertion order of [source's][reactive.core.Source] subscribers). When the
      * scheduler starts draining the set, it executes C that uses updated value of A, but with stale value of B. Then B
      * is computed, pushing again in the stack C's computation which ultimately run with correct parameters.
      *
