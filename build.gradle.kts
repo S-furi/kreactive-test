@@ -1,7 +1,8 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    kotlin("jvm") version "2.2.20"
+    val kotlinVersion = libs.versions.kotlin.get()
+    kotlin("jvm") version kotlinVersion
 }
 
 group = "io.github.sfuri"
@@ -28,7 +29,8 @@ kotlin {
     jvmToolchain(21)
 }
 
-val compileKotlin: KotlinCompile by tasks
-compileKotlin.compilerOptions {
-    freeCompilerArgs.set(listOf("-Xcontext-parameters"))
+tasks.withType<KotlinCompile>().configureEach {
+    compilerOptions {
+        freeCompilerArgs.set(listOf("-Xcontext-parameters"))
+    }
 }

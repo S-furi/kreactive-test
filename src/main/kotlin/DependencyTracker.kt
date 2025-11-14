@@ -2,7 +2,6 @@ import core.base.Computation
 import core.base.Subscriber
 import utils.UniqueStack
 import java.util.LinkedHashMap
-import java.util.Stack
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.math.max
@@ -130,6 +129,4 @@ object DependencyTracker {
         transactionComputations.get().clear()
         isInsideTransaction.set(false)
     }
-
-    private fun <T> Stack<T>.peekOrNull(): T? = runCatching { peek() }.getOrNull()
 }
