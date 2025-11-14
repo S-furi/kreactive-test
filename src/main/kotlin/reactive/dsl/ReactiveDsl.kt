@@ -1,6 +1,6 @@
 package reactive.dsl
 
-import reactive.core.Observable
+import reactive.core.Observer
 import reactive.core.Signal
 import reactive.core.Source
 import kotlin.reflect.KProperty
@@ -23,8 +23,8 @@ class ObservableDelegateProvider<T>(
     operator fun provideDelegate(
         thisRef: Any?,
         property: KProperty<*>,
-    ): Observable<T> =
-        Observable(name = property.name.toKebab(), compute = compute)
+    ): Observer<T> =
+        Observer(name = property.name.toKebab(), compute = compute)
 }
 
 class SignalDelegateProvider<T>(

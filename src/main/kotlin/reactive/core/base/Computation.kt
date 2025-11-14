@@ -1,7 +1,7 @@
 package reactive.core.base
 
 import org.slf4j.LoggerFactory
-import reactive.core.Observable
+import reactive.core.Observer
 import reactive.core.Signal
 import java.util.WeakHashMap
 
@@ -35,7 +35,7 @@ abstract class Computation<T> : Provider<T> {
         subscribers.keys.toList().forEach { sub ->
             subscribers[sub]?.let { lastAccessEpoch ->
 
-                if (this is Signal<*> && sub is Observable<*>) {
+                if (this is Signal<*> && sub is Observer<*>) {
                     logger.warn(
                         "Calling from an eager computation a lazy computation will \n" +
                             "pull the value on every update, making it effectively an eager (push) computation.\n" +

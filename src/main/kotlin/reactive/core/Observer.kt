@@ -3,6 +3,7 @@ package reactive.core
 import reactive.DependencyTracker
 import reactive.DependencyTracker.appendToCurrentTransaction
 import reactive.DependencyTracker.runAndTrack
+import reactive.core.base.Computation
 import reactive.core.base.Subscriber
 import java.util.UUID
 import kotlin.reflect.KProperty
@@ -12,10 +13,10 @@ import kotlin.reflect.KProperty
  * It recomputes **immediately** when a dependency changes.
  * Its [get] is always a cheap read of its cached value.
  */
-class Observable<T>(
+class Observer<T>(
     private val name: String = UUID.randomUUID().toString(),
     private val compute: () -> T,
-) : reactive.core.base.Computation<T>(),
+) : Computation<T>(),
     Subscriber {
     @Volatile private var current: T = runAndTrack(compute)
 
@@ -29,7 +30,7 @@ class Observable<T>(
         return current
     }
 
-    override fun <S> map(transform: (T) -> S): Observable<S> = Observable("[mapped]-$name") { transform(compute()) }
+    override fun <S> map(transform: (T) -> S): Observer<S> = Observer("[mapped]-$name") { transform(compute()) }
 
     override fun notifyUpdate() {
         appendToCurrentTransaction {

@@ -8,7 +8,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import reactive.DependencyTracker
-import reactive.core.Observable
+import reactive.core.Observer
 import reactive.core.Signal
 import reactive.core.Source
 import reactive.dsl.eagerObserving
@@ -26,7 +26,7 @@ class ReactiveFrameworkTest {
         var observerComputedCounter = 0
 
         val source = Source(10.0)
-        val observer = Observable {
+        val observer = Observer {
             observerComputedCounter++
             source.get() * 20
         }
