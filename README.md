@@ -1,4 +1,4 @@
-# Test Reactive Alchemist
+# KReactive Test
 
 A simple test implementation of a simple reactive framework purely written in Kotlin.
 
