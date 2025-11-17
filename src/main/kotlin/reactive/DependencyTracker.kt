@@ -59,8 +59,9 @@ object DependencyTracker {
         lastRunEpoch = globalEpoch.getAndUpdate { it + 1u }
         updateLevel { 0 }
 
-        if (!stack.push(this))
-            throw IllegalStateException("Circular dependency detected! $this is already being tracked.")
+        check(stack.push(this)) {
+            "Circular dependency detected! $this is already being tracked."
+        }
 
         try {
             return compute()
@@ -109,12 +110,13 @@ object DependencyTracker {
      * A ─────────────► C
      * ```
      * When updating A, without sorting topologically and just inserting the keys in a sorted set (or map), we could
-     * end up with the set `[C, B]` (depends on insertion order of [source's][reactive.core.Source] subscribers). When the
-     * scheduler starts draining the set, it executes C that uses updated value of A, but with stale value of B. Then B
-     * is computed, pushing again in the stack C's computation which ultimately run with correct parameters.
+     * end up with the set `[C, B]` (depends on insertion order of [source's][reactive.core.Source] subscribers). When
+     * the scheduler starts draining the set, it executes C that uses updated value of A, but with stale value of B.
+     * Then B is computed, pushing again in the stack C's computation which ultimately run with correct parameters.
      *
-     * This is why the topological sort (through [level][Subscriber.level]) is essential for correctness. It guarantees that no node ever runs
-     * until all of its dependencies have already been updated in the same transaction.
+     * This is why the topological sort (through [level][Subscriber.level]) is essential for correctness.
+     * It guarantees that no node ever runs until all of its dependencies have already been updated in the same
+     * transaction.
      */
     private fun runTransactions() {
         val queue = transactionComputations.get()

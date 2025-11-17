@@ -23,10 +23,8 @@ class Source<T>(
     }
 
     fun set(newValue: T) {
-        if (DependencyTracker.isCurrentlyTracking()) {
-            throw IllegalStateException(
-                "Cannot set Source '$name' (value: $newValue) from within a computed block (Observable or Signal).",
-            )
+        require(!DependencyTracker.isCurrentlyTracking()) {
+            "Cannot set Source '$name' (value: $newValue) from within a computed block (Observable or Signal)."
         }
 
         DependencyTracker.transaction {

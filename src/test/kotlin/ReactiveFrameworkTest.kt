@@ -128,7 +128,7 @@ class ReactiveFrameworkTest {
     fun `exception in Observable is not swallowed`() {
         var a by source(10)
         val b by eagerObserving {
-            if (a > 15) throw IllegalStateException("Test exception")
+            check(a < 15) { "Test exception" }
             a
         }
         assertThrows<IllegalStateException> {
@@ -140,7 +140,7 @@ class ReactiveFrameworkTest {
     fun `exception in Signals is not swallowed`() {
         var a by source(10)
         val b by lazyObserving {
-            if (a > 15) throw IllegalStateException("Test exception")
+            check(a < 15) { "Test exception" }
             a
         }
 
@@ -271,11 +271,11 @@ class ReactiveFrameworkTest {
         }
 
         val exception =
-            assertThrows<IllegalStateException> {
+            assertThrows<IllegalArgumentException> {
                 b = true
             }
 
-        assertThrows<IllegalStateException> {
+        assertThrows<IllegalArgumentException> {
             println(lazyComp)
         }
 

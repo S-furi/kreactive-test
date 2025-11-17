@@ -18,7 +18,7 @@ class Signal<T>(
     private val compute: () -> T,
 ) : Computation<T>(),
     Subscriber {
-    @Volatile private var _value: T? = null
+    @Volatile private var value: T? = null
 
     @Volatile private var isStale: Boolean = true
 
@@ -30,10 +30,10 @@ class Signal<T>(
     override fun get(): T {
         DependencyTracker.track(this)
         if (isStale) {
-            _value = runAndTrack(compute)
+            value = runAndTrack(compute)
             isStale = false
         }
-        return _value!!
+        return value!!
     }
 
     override fun <S> map(transform: (T) -> S): Signal<S> = Signal("[mapped]-$name") { transform(compute()) }
@@ -59,5 +59,5 @@ class Signal<T>(
         property: KProperty<*>,
     ): T = get()
 
-    override fun toString(): String = "Signal-$name(value=$_value, epoch=$lastRunEpoch)"
+    override fun toString(): String = "Signal-$name(value=$value, epoch=$lastRunEpoch)"
 }
