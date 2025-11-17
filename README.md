@@ -51,7 +51,7 @@ The problem of stale dependencies in this case is due to the conditional depende
 `obs` computation, we should have detected that `a`'s value is no more needed and we can remove its dependecy. Not doing this
 will re-trigger `obs` computation when `a`'s value changes even though we are no more depending on that value.
 The approach taken by this framework takes
-inspiration from MobX `onBecomeObserved` and `onBecomeUnobserved` and the lazy dependencies unlinking, where for each computation we keep track of an "epoch number".
+inspiration from *SolidJS* version concept and the lazy dependencies unlinking of various reactive frameworks (e.g. MobX, Vue and Svelte), where for each computation we keep track of an "epoch number".
 Each computation holds an epoch number that states when its being computed/accessed (`lastRunEpoch`). Each computation holds for each dependency (i.e. subscribers) the last epoch
 number it has been accessed. In this way, we consider a dependency as *active* iff the last epoch number it has been accessed is equal to the actual `lastRunEpoch` of the
 dependency itself. Otherwise the dependency is stale, and we can remove the link from the dependency and the current computation, as the dependant did not accessed current computation's
