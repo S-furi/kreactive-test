@@ -27,7 +27,30 @@ This framework allows the following depdendencies:
 - Observer --depends--> Signal: this is a special dependency and it's up to the designer to allow such dependencies or not, because having a pull depdendency on a push computation
   will break the lazy contract of the pull dependency.
 
-With automatic dependency management, the problem of detecting and properly handling **stale dependencies** is crucial: the approach taken by this framework takes
+With automatic dependency management, the problem of detecting and properly handling **stale dependencies** is crucial.
+Consider the following example:
+
+```kotlin
+a = source(10.0)
+b = source("Hello")
+cond = source(true)
+
+obs = Observer {
+  if (cond) print(a) else print(b)
+}
+
+a = 20.0
+// 20.0
+cond = false
+// Hello
+a = 15.0
+// Hello <-- Wrong!
+```
+
+The problem of stale dependencies in this case is due to the conditional dependency. In the above example, when re-evaluating
+`obs` computation, we should have detected that `a`'s value is no more needed and we can remove its dependecy. Not doing this
+will re-trigger `obs` computation when `a`'s value changes even though we are no more depending on that value.
+The approach taken by this framework takes
 inspiration from MobX `onBecomeObserved` and `onBecomeUnobserved` and the lazy dependencies unlinking, where for each computation we keep track of an "epoch number".
 Each computation holds an epoch number that states when its being computed/accessed (`lastRunEpoch`). Each computation holds for each dependency (i.e. subscribers) the last epoch
 number it has been accessed. In this way, we consider a dependency as *active* iff the last epoch number it has been accessed is equal to the actual `lastRunEpoch` of the
