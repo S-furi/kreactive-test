@@ -17,6 +17,13 @@ abstract class Computation<T> : Provider<T> {
     protected val subscribers: MutableMap<Subscriber, ULong> = WeakHashMap()
 
     fun addSubscriber(sub: Subscriber) {
+        if (this is Signal<*> && sub is Observer<*>) {
+            logger.warn(
+                "Calling from an eager computation a lazy computation will \n" +
+                    "pull the value on every update, making it effectively an eager (push) computation.\n" +
+                    "This can be tolerated, however consider that you are no more exploiting lazy computation.",
+            )
+        }
         subscribers[sub] = sub.lastRunEpoch
     }
 
@@ -34,15 +41,6 @@ abstract class Computation<T> : Provider<T> {
     protected fun updateFreshSubscribers() {
         subscribers.keys.toList().forEach { sub ->
             subscribers[sub]?.let { lastAccessEpoch ->
-
-                if (this is Signal<*> && sub is Observer<*>) {
-                    logger.warn(
-                        "Calling from an eager computation a lazy computation will \n" +
-                            "pull the value on every update, making it effectively an eager (push) computation.\n" +
-                            "This can be tolerated, however consider that you are no more exploiting lazy computation.",
-                    )
-                }
-
                 if (lastAccessEpoch < sub.lastRunEpoch) {
                     /**
                      * The subscriber has run *since* it last read this Source,
