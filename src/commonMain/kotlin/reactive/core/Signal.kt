@@ -5,16 +5,18 @@ import reactive.DependencyTracker.appendToCurrentTransaction
 import reactive.DependencyTracker.runAndTrack
 import reactive.core.base.Computation
 import reactive.core.base.Subscriber
-import java.util.UUID
+import kotlin.concurrent.Volatile
 import kotlin.reflect.KProperty
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
 /**
  * A PULL-based (lazy) computed value.
  * It only recomputes when its value is requested *and* it has
  * been marked as stale.
  */
-class Signal<T>(
-    private val name: String = UUID.randomUUID().toString(),
+class Signal<T> @OptIn(ExperimentalUuidApi::class) constructor(
+    private val name: String = Uuid.random().toString(),
     private val compute: () -> T,
 ) : Computation<T>(),
     Subscriber {
@@ -24,7 +26,8 @@ class Signal<T>(
 
     @Volatile override var lastRunEpoch: ULong = 0u
 
-    @Volatile override var level: Int = 0
+    @Volatile
+    override var level: Int = 0
         private set
 
     override fun get(): T {

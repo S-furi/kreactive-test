@@ -4,8 +4,6 @@ import reactive.core.Observer
 import reactive.core.Signal
 import reactive.core.Source
 import kotlin.reflect.KProperty
-import kotlin.reflect.KProperty0
-import kotlin.reflect.jvm.isAccessible
 
 class SourceDelegateProvider<T>(
     private val initialValue: T,
@@ -44,8 +42,3 @@ fun <T> source(initialValue: T): SourceDelegateProvider<T> = SourceDelegateProvi
 fun <T> eagerObserving(compute: () -> T): ObservableDelegateProvider<T> = ObservableDelegateProvider(compute)
 
 fun <T> lazyObserving(compute: () -> T): SignalDelegateProvider<T> = SignalDelegateProvider(compute)
-
-inline fun <reified D> KProperty0<*>.getAccessibleDelegates(): D? {
-    isAccessible = true
-    return getDelegate() as? D
-}

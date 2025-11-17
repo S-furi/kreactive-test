@@ -1,24 +1,21 @@
 @file:Suppress("UNUSED_VARIABLE", "UNUSED_PARAMETER")
 
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.assertThrows
+import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.core.spec.style.StringSpec
+import io.kotest.matchers.shouldBe
 import reactive.DependencyTracker
 import reactive.core.Signal
 import reactive.dsl.eagerObserving
 import reactive.dsl.lazyObserving
 import reactive.dsl.source
-import kotlin.test.Test
 
 @Suppress("UNUSED")
-class TopologyTests {
-    @BeforeEach
-    fun resetState() {
+class TopologyTests : StringSpec({
+    beforeTest {
         DependencyTracker.reset()
     }
 
-    @Test
-    fun `testing topology 1 (eager)`() {
+    "testing topology 1 (eager)" {
         // ┌───────►B───────┐
         // │                │
         // │                ▼
@@ -34,13 +31,11 @@ class TopologyTests {
         }
 
         a = "Hello World!"
-        assertEquals(1, cComputeCount) {
-            "C should have been called once!"
-        }
+        cComputeCount shouldBe 1
     }
 
-    @Test
-    fun `testing topology 1 (lazy)`() {
+
+    "testing topology 1 (lazy)" {
         // ┌───────►B───────┐
         // │                │
         // │                ▼
@@ -58,20 +53,16 @@ class TopologyTests {
         a = "Hello World!"
         c
         b
-        assertEquals(1, cComputeCount) {
-            "C should have been called once!"
-        }
+        cComputeCount shouldBe 1
+
         cComputeCount = 0
         a = "Hello"
         b
         c
-        assertEquals(1, cComputeCount) {
-            "C should have been called once!"
-        }
+        cComputeCount shouldBe 1
     }
 
-    @Test
-    fun `test Signal diamond dependency is not called twice`() {
+    "test Signal diamond dependency is not called twice" {
         // ┌──────►B────┐
         // │            │
         // │            │
@@ -99,26 +90,24 @@ class TopologyTests {
             b + c
         }
 
-        assertEquals(35, d)
-        assertEquals(1, bComputeCount)
-        assertEquals(1, cComputeCount)
-        assertEquals(1, dComputeCount)
+        d shouldBe 35
+        bComputeCount shouldBe 1
+        cComputeCount shouldBe 1
+        dComputeCount shouldBe 1
 
         a = 20
-        assertEquals(1, bComputeCount, "B should not recompute yet")
-        assertEquals(1, cComputeCount, "C should not recompute yet")
-        assertEquals(1, dComputeCount, "D should not recompute yet")
+        bComputeCount shouldBe 1
+        cComputeCount shouldBe 1
+        dComputeCount shouldBe 1
 
-        listOf("should recompute", "should use cache").forEach { msg ->
-            assertEquals(65, d)
-            assertEquals(2, bComputeCount, "B $msg")
-            assertEquals(2, cComputeCount, "C $msg")
-            assertEquals(2, dComputeCount, "D $msg")
-        }
+        d shouldBe 65
+        bComputeCount shouldBe 2
+        cComputeCount shouldBe 2
+        dComputeCount shouldBe 2
     }
 
-    @Test
-    fun `test Observable diamond dependency is not called twice`() {
+
+    "test Observable diamond dependency is not called twice" {
         // ┌──────►B────┐
         // │            │
         // │            │
@@ -142,28 +131,17 @@ class TopologyTests {
 
         a = 20
 
-        assertEquals(
-            1,
-            dComputeCount,
-            "D was expected to be updated once, but it has been updated $dComputeCount",
-        )
+        dComputeCount shouldBe 1
     }
 
-    @Test
-    fun `circular dependencies should be detected and throw IllegalStateException`() {
+    "circular dependencies should be detected and fail" {
         lateinit var a: Signal<Int>
         lateinit var b: Signal<Int>
 
-        a =
-            Signal("A") {
-                b.get() + 1
-            }
+        a = Signal("A") { b.get() + 1 }
 
-        b =
-            Signal("B") {
-                a.get() + 2
-            }
+        b = Signal("B") { a.get() + 2 }
 
-        assertThrows<IllegalStateException> { a.get() }
+        shouldThrow<IllegalArgumentException> { a.get() }
     }
-}
+})

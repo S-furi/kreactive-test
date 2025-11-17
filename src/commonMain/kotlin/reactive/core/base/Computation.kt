@@ -1,12 +1,13 @@
 package reactive.core.base
 
-import org.slf4j.LoggerFactory
+import co.touchlab.kermit.Logger
 import reactive.core.Observer
 import reactive.core.Signal
-import java.util.WeakHashMap
+import reactive.utils.IterableWeakMap
 
 abstract class Computation<T> : Provider<T> {
-    private val logger = LoggerFactory.getLogger(this::class.java)
+
+    private val logger = Logger.withTag(this::class.toString())
 
     open val level: Int = 0
 
@@ -14,15 +15,15 @@ abstract class Computation<T> : Provider<T> {
      * Keep a reference to all [Subscribers][Subscriber] along with
      * the [last run epoch][Subscriber.lastRunEpoch] counter it had when it last *read* this node.
      */
-    protected val subscribers: MutableMap<Subscriber, ULong> = WeakHashMap()
+    protected val subscribers: MutableMap<Subscriber, ULong> = IterableWeakMap()
 
     fun addSubscriber(sub: Subscriber) {
         if (this is Signal<*> && sub is Observer<*>) {
-            logger.warn(
+            logger.w {
                 "Calling from an eager computation a lazy computation will \n" +
                     "pull the value on every update, making it effectively an eager (push) computation.\n" +
-                    "This can be tolerated, however consider that you are no more exploiting lazy computation.",
-            )
+                    "This can be tolerated, however consider that you are no more exploiting lazy computation."
+            }
         }
         subscribers[sub] = sub.lastRunEpoch
     }

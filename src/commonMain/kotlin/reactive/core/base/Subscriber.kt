@@ -12,12 +12,14 @@ interface Subscriber {
     var lastRunEpoch: ULong
 
     /**
-     * Represent the depth of the execution graph when executing a [transaction][reactive.DependencyTracker.transaction].
+     * Represent the depth of the execution graph when executing a
+     * [transaction][reactive.DependencyTracker.transaction].
      *
-     * A [reactive.core.Source] is at depth 0 of the graph, while [observables][reactive.core.Observer] or [signals][reactive.core.Signal] directly dependent
+     * A [reactive.core.Source] is at depth 0 of the graph, while [observables][reactive.core.Observer] or
+     * [signals][reactive.core.Signal] directly dependent
      * on it are one level deeper, and so on for further dependencies chains.
-     * The levels are used to topologically-sort the computations when [reactive.DependencyTracker] scheduler's starts picking
-     * and executing actions.
+     * The levels are used to topologically-sort the computations when [reactive.DependencyTracker]
+     * scheduler's starts picking and executing actions.
      *
      * @see [reactive.DependencyTracker.runTransactions]
      */

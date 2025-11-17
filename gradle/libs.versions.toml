@@ -4,6 +4,10 @@ logback = "1.5.21"
 junit = "5.10.2"
 benchmark = "0.4.14"
 coroutines = "1.10.2"
+kotest = "6.0.4"
+ksp = "2.3.2"
+kermit = "2.0.4"
+pedestal = "3.1.1"
 
 [libraries]
 junit-jupiter-api = { group = "org.junit.jupiter", name = "junit-jupiter-api", version.ref = "junit" }
@@ -12,6 +16,22 @@ logback-classic = { group = "ch.qos.logback", name = "logback-classic", version.
 kotlinx-benchamrk-runtime = { group = "org.jetbrains.kotlinx", name = "kotlinx-benchmark-runtime", version.ref = "benchmark" }
 kotlinx-coroutines-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version.ref = "coroutines" }
 kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "coroutines" }
+kotest-assertions-core = { group = "io.kotest", name = "kotest-assertions-core", version.ref = "kotest" }
+kotest-property = { group = "io.kotest", name = "kotest-property", version.ref = "kotest" }
+kotest-framework-engine = { group = "io.kotest", name = "kotest-framework-engine", version.ref = "kotest" }
+kotest-runner-junit = { group = "io.kotest", name = "kotest-runner-junit5", version.ref = "kotest" }
+pedestal-weak = { group = "dev.opensavvy.pedestal", name = "weak", version.ref = "pedestal"}
+kermit-core = { group = "co.touchlab", name = "kermit", version.ref = "kermit" }
+
+
+[bundles]
+test-kotest = [
+    "kotest-assertions-core",
+    "kotest-property",
+    "kotest-framework-engine",
+]
 
 [plugins]
 kotlinx-benchmark = {  id = "org.jetbrains.kotlinx.benchmark", version.ref = "benchmark"}
+kotest = { id = "io.kotest", version.ref = "kotest" }
+ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }

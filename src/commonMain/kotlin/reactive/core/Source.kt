@@ -2,8 +2,10 @@ package reactive.core
 
 import reactive.DependencyTracker
 import reactive.core.base.Computation
-import java.util.UUID
+import kotlin.concurrent.Volatile
 import kotlin.reflect.KProperty
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
 /**
  * A writeable [reactive.core.base.Provider].
@@ -11,10 +13,11 @@ import kotlin.reflect.KProperty
  * This is the start of a reactive chain. When its value changes (by
  * means of [set]) it notifies both push and pull subscribers.
  */
-class Source<T>(
+class Source<T> @OptIn(ExperimentalUuidApi::class) constructor(
     initialValue: T,
-    private val name: String = UUID.randomUUID().toString(),
+    private val name: String = Uuid.random().toString()
 ) : Computation<T>() {
+
     @Volatile private var current: T = initialValue
 
     override fun get(): T {
@@ -23,10 +26,8 @@ class Source<T>(
     }
 
     fun set(newValue: T) {
-        if (DependencyTracker.isCurrentlyTracking()) {
-            throw IllegalStateException(
-                "Cannot set Source '$name' (value: $newValue) from within a computed block (Observable or Signal).",
-            )
+        check(!DependencyTracker.isCurrentlyTracking()) {
+            "Cannot set Source '$name' (value: $newValue) from within a computed block (Observable or Signal)."
         }
 
         DependencyTracker.transaction {

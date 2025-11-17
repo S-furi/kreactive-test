@@ -5,20 +5,23 @@ import reactive.DependencyTracker.appendToCurrentTransaction
 import reactive.DependencyTracker.runAndTrack
 import reactive.core.base.Computation
 import reactive.core.base.Subscriber
-import java.util.UUID
+import kotlin.concurrent.Volatile
 import kotlin.reflect.KProperty
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
 /**
  * A PUSH-based (eager) computed value.
  * It recomputes **immediately** when a dependency changes.
  * Its [get] is always a cheap read of its cached value.
  */
-class Observer<T>(
-    private val name: String = UUID.randomUUID().toString(),
+class Observer<T> @OptIn(ExperimentalUuidApi::class) constructor(
+    private val name: String = Uuid.random().toString(),
     private val compute: () -> T,
 ) : Computation<T>(),
     Subscriber {
-    @Volatile private var current: T = runAndTrack(compute)
+    @Volatile
+    private var current: T = runAndTrack(compute)
 
     @Volatile override var lastRunEpoch: ULong = 0u
 
