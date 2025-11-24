@@ -39,7 +39,7 @@ abstract class Computation<T> : Provider<T> {
      * - `lastAccessEpoch`: The epoch it had when it *last read this Source*.
      */
     protected fun updateFreshSubscribers() {
-        subscribers.keys.toList().forEach { sub ->
+        subscribers.keys.forEach { sub ->
             subscribers[sub]?.let { lastAccessEpoch ->
                 if (lastAccessEpoch < sub.lastRunEpoch) {
                     /**

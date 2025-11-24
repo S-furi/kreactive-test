@@ -4,9 +4,7 @@ import reactive.DependencyTracker.runAndTrack
 import reactive.DependencyTracker.track
 import reactive.core.base.Computation
 import reactive.core.base.Subscriber
-import reactive.utils.UniqueStack
-import java.util.concurrent.atomic.AtomicBoolean
-import java.util.concurrent.atomic.AtomicReference
+import java.util.PriorityQueue
 import kotlin.math.max
 
 /**
@@ -23,16 +21,16 @@ object DependencyTracker {
      * A global version number for all reactive computations.
      * Incremented every time any subscriber re-runs.
      */
-    private val globalEpoch = AtomicReference<ULong>(0u)
+    private var globalEpoch: ULong = 0u
 
-    private val subscribersStack = ThreadLocal.withInitial { UniqueStack<Subscriber>() }
+    private val subscribersStack = ArrayList<Subscriber>()
+    private val subscribersOnStack = HashSet<Subscriber>()
 
-    private val transactionComputations =
-        ThreadLocal.withInitial {
-            LinkedHashMap<Subscriber, () -> Unit>(16, 0.75f, true)
-        }
+    private var isInsideTransaction = false
 
-    private val isInsideTransaction = AtomicBoolean(false)
+    private val transactionQueue = PriorityQueue<Subscriber> { a, b -> a.level.compareTo(b.level) }
+
+    private val transactionComputations = HashMap<Subscriber, () -> Unit>()
 
     /**
      * Tracks a read operation of the given [node].
@@ -44,7 +42,8 @@ object DependencyTracker {
      * level or one level deeper than the input [node].
      */
     fun track(node: Computation<*>) {
-        subscribersStack.get().peek()?.let { sub ->
+        if (subscribersStack.isNotEmpty()) {
+            val sub = subscribersStack.last()
             node.addSubscriber(sub)
             sub.updateLevel { max(it, node.level + 1) }
         }
@@ -55,37 +54,45 @@ object DependencyTracker {
      * [Subscriber].
      */
     fun <T> Subscriber.runAndTrack(compute: () -> T): T {
-        val stack = subscribersStack.get()
-        lastRunEpoch = globalEpoch.getAndUpdate { it + 1u }
-        updateLevel { 0 }
-
-        check(stack.push(this)) {
+        check(subscribersOnStack.add(this)) {
             "Circular dependency detected! $this is already being tracked."
         }
+        subscribersStack.add(this)
+
+        lastRunEpoch = ++globalEpoch
+        updateLevel { 0 }
 
         try {
             return compute()
         } finally {
-            stack.pop()
+            subscribersStack.removeLast()
+            subscribersOnStack.remove(this)
         }
     }
 
-    fun isCurrentlyTracking(): Boolean = this.subscribersStack.get().isNotEmpty()
+    fun isCurrentlyTracking(): Boolean = subscribersStack.isNotEmpty()
 
     fun transaction(body: () -> Unit) {
-        if (isInsideTransaction.getAndSet(true)) return body()
+        if (isInsideTransaction) return body()
+        isInsideTransaction = true
         try {
             body()
         } finally {
-            runTransactions()
-            transactionComputations.get().clear()
-            isInsideTransaction.set(false)
+            try {
+                runTransactions()
+            } finally {
+                isInsideTransaction = false
+                transactionQueue.clear()
+                transactionComputations.clear()
+            }
         }
     }
 
     fun Subscriber.appendToCurrentTransaction(computation: () -> Unit) {
-        if (isInsideTransaction.get()) {
-            transactionComputations.get()[this] = computation
+        if (isInsideTransaction) {
+            if (transactionComputations.put(this, computation) == null) {
+                transactionQueue.offer(this)
+            }
         } else {
             computation()
         }
@@ -119,19 +126,18 @@ object DependencyTracker {
      * transaction.
      */
     private fun runTransactions() {
-        val queue = transactionComputations.get()
-        while (queue.isNotEmpty()) {
-            val updates = queue.keys.sortedBy { it.level }
-            updates.forEach { sub ->
-                queue.remove(sub)?.invoke()
-            }
+        while(!transactionQueue.isEmpty()) {
+            val sub = transactionQueue.poll()
+            transactionComputations.remove(sub)?.invoke()
         }
     }
 
     internal fun reset() {
-        globalEpoch.set(0u)
-        subscribersStack.get().clear()
-        transactionComputations.get().clear()
-        isInsideTransaction.set(false)
+        globalEpoch = 0u
+        subscribersStack.clear()
+        subscribersOnStack.clear()
+        transactionQueue.clear()
+        transactionComputations.clear()
+        isInsideTransaction = false
     }
 }
